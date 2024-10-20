@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0xf5auks1rg3"]
+
+[ext_resource type="Script" path="res://scripts/WebRxControl.cs" id="1_tive0"]
+
+[node name="MainScene" type="Node2D"]
+
+[node name="WebRX" type="Node" parent="."]
+script = ExtResource("1_tive0")
