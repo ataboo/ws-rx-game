@@ -1,8 +1,105 @@
-[gd_scene load_steps=2 format=3 uid="uid://b0xf5auks1rg3"]
+[gd_scene load_steps=4 format=3 uid="uid://b0xf5auks1rg3"]
 
-[ext_resource type="Script" path="res://scripts/WebRxControl.cs" id="1_tive0"]
+[ext_resource type="Script" path="res://src/webrx/WebRxControl.cs" id="1_28ajm"]
+[ext_resource type="Script" path="res://scripts/ConnectScreen.cs" id="2_bmwc5"]
+[ext_resource type="Theme" uid="uid://cl0dofsdpnv30" path="res://ui_theme.tres" id="2_wjcds"]
 
 [node name="MainScene" type="Node2D"]
 
 [node name="WebRX" type="Node" parent="."]
-script = ExtResource("1_tive0")
+script = ExtResource("1_28ajm")
+
+[node name="Connect screen" type="CanvasLayer" parent="." node_paths=PackedStringArray("userNameInput", "roomInput", "joinButton", "errorLabel", "webRX")]
+script = ExtResource("2_bmwc5")
+userNameInput = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/UsernameInput")
+roomInput = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2/RoomCodeInput")
+joinButton = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/ConnectButton")
+errorLabel = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/MarginContainer/ErrorLabel")
+webRX = NodePath("../WebRX")
+
+[node name="BG" type="Panel" parent="Connect screen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -2.0
+offset_top = 1.0
+offset_right = -2.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_wjcds")
+
+[node name="PanelContainer" type="PanelContainer" parent="Connect screen/BG"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.5
+offset_top = -33.0
+offset_right = 75.5
+offset_bottom = 33.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Connect screen/BG/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Connect screen/BG/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Label" type="Label" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+text = "Username"
+
+[node name="UsernameInput" type="LineEdit" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ataboo"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 40)
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Label" type="Label" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+text = "Room code"
+
+[node name="RoomCodeInput" type="LineEdit" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ABCDEF"
+
+[node name="MarginContainer" type="MarginContainer" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="ErrorLabel" type="Label" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer/MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Failed to connect"
+
+[node name="ConnectButton" type="Button" parent="Connect screen/BG/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Connect"

@@ -1,90 +1,180 @@
 using Godot;
-using System;
-using System.Linq;
-using System.Text;
+using System.Text.Json;
 
 // For self-signed cert, you'll need to set the Certificate bundle override in Godot to the `cert.pem` used by the server.
 
 public partial class WebRxControl : Node
 {
+	[Signal]
+	public delegate void WSConnectEventHandler();
+
+	[Signal]
+	public delegate void WSDisconnectEventHandler();
+
 	private WebSocketPeer ws;
+
+	private WebSocketPeer.State _wsState = WebSocketPeer.State.Closed;
+	public WebSocketPeer.State WSState => _wsState;
+
+	private string lastConnectUrl;
+	private TlsOptions lastTlsOptions;
+	private string lastUserName;
+	private string lastRoomCode;
+	private ushort userId;
+	private WebSocketPeer.State lastState;
+
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		GD.Print("Ready?");
-		ConnectWS();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		ws.Poll();
-
-		var state = ws.GetReadyState();
-
-		if (state == WebSocketPeer.State.Open)
-		{
-			while (ws.GetAvailablePacketCount() > 0)
-			{
-				var packet = ws.GetPacket();
-				GD.Print("Got packet");
-
-				if(WSMessage.TryParse(packet, out var msg)) {
-					GD.Print(msg);
-
-					switch(msg.code) {
-						case 1:
-							this.SendJoin();
-						break;
-					}
-				}
-
-				// var sb = new StringBuilder();
-				// foreach (var b in packet)
-				// {
-				// 	sb.Append(b + ", ");
-				// }
-				// GD.Print(sb.ToString());
-			}
-		}
+		UpdateWS();
 	}
 
-	public Error ConnectWS()
+	public Error ConnectWS(string url, TlsOptions tlsClientOptions, string userName, string roomCode)
 	{
-		// if (Joined)
-		// {
-		//     return Error.AlreadyInUse;
-		// }
+		ws = new WebSocketPeer();
+		lastState = WebSocketPeer.State.Connecting;
 
-		this.ws = new WebSocketPeer();
+		if(ws.GetReadyState() != WebSocketPeer.State.Closed) {
+			GD.Print("Bad state: ", ws.GetReadyState());
 
-		// ws.VerifySsl = false;
-		// ws.Connect("connection_established", this, nameof(HandleConnected));
-		// ws.Connect("connection_error", this, nameof(HandleConnectionError));
-		// ws.Connect("connection_closed", this, nameof(HandleConnectionEnded));
-		// ws.Connect("data_received", this, nameof(HandleDataReceived));
+			return Error.Busy;
+		} else {
+			GD.Print("State fine");
+		}
 
+		lastConnectUrl = url;
+		lastTlsOptions = tlsClientOptions;
+		lastUserName = userName;
+		lastRoomCode = roomCode;
 
-		var err = ws.ConnectToUrl("wss://localhost:3000/ws", tlsClientOptions: TlsOptions.ClientUnsafe());
+		var err = ws.ConnectToUrl(url, tlsClientOptions);
 		if (err != Error.Ok)
 		{
-			GD.Print(err);
-			SetProcess(false);
+			EmitSignal(SignalName.WSDisconnect);
+			return err;
 		}
 
 		return Error.Ok;
 	}
 
-	private void SendJoin()
+	private void UpdateWS()
 	{
-		var payload = Encoding.UTF8.GetBytes(@"{""name"": ""ataboo"", ""room_code"": ""ABCDEF""}");
+		if(ws == null) {
+			return;
+		}
 
-		var len = (byte)(payload.Length + 10);
-		var testMsg = new byte[] { len, 0, 0, 0, 1, 0, 2, 0, 3, 0 };
-		testMsg = testMsg.Concat(payload).ToArray();
+		ws.Poll();
 
-		ws.Send(testMsg, WebSocketPeer.WriteMode.Binary);
+		var state = ws.GetReadyState();
+		var stateChanged = state != lastState;
+		lastState = state;
+
+		if(stateChanged) {
+			GD.Print($"WebRX changed state: {lastState} => {state}");
+			switch(state) {
+				case WebSocketPeer.State.Closed:
+					EmitSignal(SignalName.WSDisconnect);
+					break;
+				case WebSocketPeer.State.Open:
+					EmitSignal(SignalName.WSConnect);
+					break;
+			}
+		}
+
+		switch (state)
+		{
+			case WebSocketPeer.State.Open:
+				ProcessPackets();
+				break;
+			case WebSocketPeer.State.Connecting:
+			case WebSocketPeer.State.Closing:
+			case WebSocketPeer.State.Closed:
+				break;
+		}
+	}
+
+	private void ProcessPackets()
+	{
+		while (ws.GetAvailablePacketCount() > 0)
+		{
+			var packet = ws.GetPacket();
+			if (WSMessage.TryParse(packet, out var msg))
+			{
+				GD.Print(msg);
+
+				switch (msg.code)
+				{
+					case WSMessageCode.Welcome:
+						HandleWelcome(msg);
+						break;
+					case WSMessageCode.Broadcast:
+					case WSMessageCode.BroadcastOthers:
+						HandleBroadcast(msg);
+						break;
+				}
+			}
+			else
+			{
+				GD.PrintErr("Failed to parse packet");
+			}
+		}
+	}
+
+	private void HandleWelcome(WSMessage msg)
+	{
+		GD.Print(msg.PayloadStr);
+
+		try
+		{
+			var welcome = JsonSerializer.Deserialize<WelcomePayload>(msg.PayloadStr);
+			userId = welcome.UserId;
+
+			GD.Print($"Got id {this.userId}");
+
+			var err = SendJoin();
+			if(err != Error.Ok) {
+				GD.PrintErr("Failed to send join");
+			}
+		}
+		catch
+		{
+			GD.PrintErr("Failed to parse welcome");
+			return;
+		}
+
+
+
+	}
+
+	private void HandleBroadcast(WSMessage msg) {
+		switch(msg.payloadId) {
+			case WSPayloadId.PlayerChange:
+				var pld = msg.DeserializePayload<PlayerlistPayload>();
+				foreach(var p in pld.Players) {
+					GD.Print($"Player: '{p.Name}'");
+				}
+				
+				break;
+
+		}
+	}
+
+	private Error SendJoin()
+	{
+		var payload = new JoinPayload {
+			Name = lastUserName,
+			RoomCode = lastRoomCode,
+		};
+
+		WSMessage.TryEncode(1, WSMessageCode.Join, userId, WSPayloadId.Join, payload, out var bytes);
+
+		return ws.Send(bytes, WebSocketPeer.WriteMode.Binary);
 	}
 
 	// public Error SendRequest(WSRequest request)
