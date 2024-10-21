@@ -25,9 +25,7 @@ public partial class RemotePlayers : Node2D
 	}
 
 	public void HandlePayload(int payloadId, string payloadStr)
-	{
-		GD.Print("Payload id: ", payloadId);
-			
+	{		
 		switch((WSPayloadId)payloadId) {
 			case WSPayloadId.CharacterPos:
 				HandlePosChange(payloadStr);

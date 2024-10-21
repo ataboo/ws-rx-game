@@ -44,32 +44,39 @@ public partial class RemoteGuyControl : RigidBody2D
 
     public override void _IntegrateForces(PhysicsDirectBodyState2D state)
     {
-		GD.Print($"{TargetVel.X}, {TargetVel.Y}");
-		// state.LinearVelocity = TargetVel;
-
 		var deltaPos = TargetPos - Position;
 
-		var len = deltaPos.Length();
 
-		state.ApplyForce(deltaPos / len * Mathf.Sqrt(len));
+		state.LinearVelocity = TargetVel * 1f + deltaPos * .5f;
+
+		
+		// var len = deltaPos.Length();
+
+		// state.ApplyForce(deltaPos / len * Mathf.Sqrt(len));
 		
 
+
+
 		Rotation = 0;
+		// if(posSet) {
+		// 	Position = Position.Lerp(TargetPos;
+		// 	posSet = false;
+		// }
     }
 
     public override void _PhysicsProcess(double delta)
 	{
-		if (!posSet)
-		{
-			return;
-		}
+		// if (!posSet)
+		// {
+		// 	return;
+		// }
 
-		if (!firstMove)
-		{
-			Position = TargetPos;
-			firstMove = true;
-			return;
-		}
+		// if (!firstMove)
+		// {
+		// 	Position = TargetPos;
+		// 	firstMove = true;
+		// 	return;
+		// }
 
 		// Rotation = 0;
 

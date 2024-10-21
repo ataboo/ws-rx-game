@@ -38,7 +38,6 @@ public partial class ConnectScreen : CanvasLayer
 	}
 
 	public void HandleConnectPush() {
-		GD.Print("press fired?\n");
 		EnableForm(false);
 		errorLabel.Visible = false;
 

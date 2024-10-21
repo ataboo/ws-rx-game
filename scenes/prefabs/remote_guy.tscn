@@ -1,10 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://dbmxbe7hg8jbr"]
+[gd_scene load_steps=5 format=3 uid="uid://dbmxbe7hg8jbr"]
 
 [ext_resource type="Script" path="res://scripts/RemoteGuyControl.cs" id="1_4h8xk"]
 [ext_resource type="Texture2D" uid="uid://bjy8tsjychng1" path="res://icon.svg" id="1_ax3jl"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_3g55j"]
 radius = 19.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_ohwst"]
+font_color = Color(0.147672, 0.147672, 0.147672, 1)
 
 [node name="RemoteGuy" type="RigidBody2D" node_paths=PackedStringArray("label")]
 gravity_scale = 0.0
@@ -29,3 +32,4 @@ offset_right = 43.5
 offset_bottom = 39.0
 grow_horizontal = 2
 text = "ataboo2 (2)"
+label_settings = SubResource("LabelSettings_ohwst")

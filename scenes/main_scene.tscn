@@ -9,11 +9,11 @@
 [ext_resource type="Script" path="res://scripts/RemotePlayers.cs" id="5_dowf3"]
 [ext_resource type="PackedScene" uid="uid://dbmxbe7hg8jbr" path="res://scenes/prefabs/remote_guy.tscn" id="6_hpry0"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_3g55j"]
-radius = 19.0
+[sub_resource type="CircleShape2D" id="CircleShape2D_wvvog"]
+radius = 17.0
 
 [sub_resource type="LabelSettings" id="LabelSettings_nra7t"]
-font_color = Color(0, 0, 0, 1)
+font_color = Color(2.40654e-06, 0, 0.734316, 1)
 
 [node name="MainScene" type="Node2D"]
 
@@ -142,7 +142,7 @@ label = NodePath("Label")
 timer = NodePath("Timer")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GameControl/PlayerGuy"]
-shape = SubResource("CircleShape2D_3g55j")
+shape = SubResource("CircleShape2D_wvvog")
 
 [node name="Sprite2D" type="Sprite2D" parent="GameControl/PlayerGuy"]
 scale = Vector2(0.28125, 0.28125)
