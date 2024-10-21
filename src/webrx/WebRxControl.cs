@@ -11,6 +11,12 @@ public partial class WebRxControl : Node
 	[Signal]
 	public delegate void WSDisconnectEventHandler();
 
+	[Signal]
+	public delegate void WSJoinedEventHandler();
+
+	[Signal]
+	public delegate void WSPayloadReceivedEventHandler(int payloadId, string payloadStr);
+
 	private WebSocketPeer ws;
 
 	private WebSocketPeer.State _wsState = WebSocketPeer.State.Closed;
@@ -22,6 +28,9 @@ public partial class WebRxControl : Node
 	private string lastRoomCode;
 	private ushort userId;
 	private WebSocketPeer.State lastState;
+
+	public ushort UserId => userId;
+	public string UserName => lastUserName;
 
 
 	// Called when the node enters the scene tree for the first time.
@@ -61,6 +70,13 @@ public partial class WebRxControl : Node
 		}
 
 		return Error.Ok;
+	}
+
+	public void SendMsg<T>(WSPayloadId pldId, WSMessageCode code, T payload) {
+		var pldString = JsonSerializer.Serialize(payload);
+		var msgBytes = new WSMessage(1, code, userId, pldId, pldString).Marshal();
+
+		ws.Send(msgBytes, WebSocketPeer.WriteMode.Binary);
 	}
 
 	private void UpdateWS()
@@ -140,7 +156,10 @@ public partial class WebRxControl : Node
 			var err = SendJoin();
 			if(err != Error.Ok) {
 				GD.PrintErr("Failed to send join");
+				return;
 			}
+
+			EmitSignal(SignalName.WSJoined);
 		}
 		catch
 		{
@@ -153,6 +172,8 @@ public partial class WebRxControl : Node
 	}
 
 	private void HandleBroadcast(WSMessage msg) {
+		EmitSignal(SignalName.WSPayloadReceived, new Variant[] {(int)msg.payloadId, msg.PayloadStr});
+
 		switch(msg.payloadId) {
 			case WSPayloadId.PlayerChange:
 				var pld = msg.DeserializePayload<PlayerlistPayload>();

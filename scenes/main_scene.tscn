@@ -1,15 +1,39 @@
-[gd_scene load_steps=4 format=3 uid="uid://b0xf5auks1rg3"]
+[gd_scene load_steps=11 format=3 uid="uid://b0xf5auks1rg3"]
 
 [ext_resource type="Script" path="res://src/webrx/WebRxControl.cs" id="1_28ajm"]
 [ext_resource type="Script" path="res://scripts/ConnectScreen.cs" id="2_bmwc5"]
 [ext_resource type="Theme" uid="uid://cl0dofsdpnv30" path="res://ui_theme.tres" id="2_wjcds"]
+[ext_resource type="Script" path="res://scripts/PlayerControl.cs" id="4_brls2"]
+[ext_resource type="Texture2D" uid="uid://bjy8tsjychng1" path="res://icon.svg" id="4_ijsqc"]
+[ext_resource type="Script" path="res://scripts/GameControl.cs" id="4_lnpcl"]
+[ext_resource type="Script" path="res://scripts/RemotePlayers.cs" id="5_dowf3"]
+[ext_resource type="PackedScene" uid="uid://dbmxbe7hg8jbr" path="res://scenes/prefabs/remote_guy.tscn" id="6_hpry0"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3g55j"]
+radius = 19.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_nra7t"]
+font_color = Color(0, 0, 0, 1)
 
 [node name="MainScene" type="Node2D"]
 
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.796078, 0.929412, 0.929412, 1)
+
 [node name="WebRX" type="Node" parent="."]
+process_mode = 3
 script = ExtResource("1_28ajm")
 
 [node name="Connect screen" type="CanvasLayer" parent="." node_paths=PackedStringArray("userNameInput", "roomInput", "joinButton", "errorLabel", "webRX")]
+process_mode = 3
 script = ExtResource("2_bmwc5")
 userNameInput = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/UsernameInput")
 roomInput = NodePath("BG/PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2/RoomCodeInput")
@@ -21,10 +45,6 @@ webRX = NodePath("../WebRX")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -2.0
-offset_top = 1.0
-offset_right = -2.0
-offset_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_wjcds")
@@ -103,3 +123,41 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Connect"
+
+[node name="GameControl" type="Node2D" parent="."]
+script = ExtResource("4_lnpcl")
+
+[node name="Camera2D" type="Camera2D" parent="GameControl"]
+
+[node name="RemotePlayers" type="Node2D" parent="GameControl"]
+script = ExtResource("5_dowf3")
+remoteGuyPrefab = ExtResource("6_hpry0")
+
+[node name="PlayerGuy" type="RigidBody2D" parent="GameControl" node_paths=PackedStringArray("label", "timer")]
+gravity_scale = 0.0
+linear_damp_mode = 1
+linear_damp = 5.0
+script = ExtResource("4_brls2")
+label = NodePath("Label")
+timer = NodePath("Timer")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameControl/PlayerGuy"]
+shape = SubResource("CircleShape2D_3g55j")
+
+[node name="Sprite2D" type="Sprite2D" parent="GameControl/PlayerGuy"]
+scale = Vector2(0.28125, 0.28125)
+texture = ExtResource("4_ijsqc")
+
+[node name="Label" type="Label" parent="GameControl/PlayerGuy"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -39.0
+offset_top = 16.0
+offset_right = 39.0
+offset_bottom = 39.0
+grow_horizontal = 2
+text = "ataboo (1)"
+label_settings = SubResource("LabelSettings_nra7t")
+
+[node name="Timer" type="Timer" parent="GameControl/PlayerGuy"]
